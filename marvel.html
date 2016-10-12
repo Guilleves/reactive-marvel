@@ -4,6 +4,9 @@
     <script src="https://unpkg.com/react@15.3.0/dist/react.js"></script>
     <script src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.30.5/react-bootstrap.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
     <link rel="stylesheet" href="base.css" />
 
     <meta charset="UTF-8">
@@ -11,6 +14,9 @@
 
 </head>
 <body>
+    <div id="navbar" >
+
+    </div>
     <div >
         <h1>Reactive Marvel Database</h1>
     </div>
@@ -33,10 +39,46 @@
         xhr.send();
     };
 /////////////////////////////////////////////////
+var Navbar = ReactBootstrap.Navbar,
+Nav = ReactBootstrap.Nav,
+NavItem = ReactBootstrap.NavItem,
+DropdownButton = ReactBootstrap.DropdownButton,
+MenuItem = ReactBootstrap.MenuItem,
+NavDropdown = ReactBootstrap.NavDropdown;
+const navbarInstance = (
+    <Navbar inverse>
+    <Navbar.Header>
+      <Navbar.Brand>
+        <a href="#">Marvel Catalogue</a>
+      </Navbar.Brand>
+      <Navbar.Toggle />
+    </Navbar.Header>
+    <Navbar.Collapse>
+      <Nav>
+        <NavItem eventKey={1} href="#">Characters</NavItem>
+        <NavItem eventKey={2} href="#">Comics</NavItem>
+        <NavDropdown eventKey={3} title="Dropdown" id="basic-nav-dropdown">
+          <MenuItem eventKey={3.1}>Action</MenuItem>
+          <MenuItem eventKey={3.2}>Another action</MenuItem>
+          <MenuItem eventKey={3.3}>Something else here</MenuItem>
+          <MenuItem divider />
+          <MenuItem eventKey={3.3}>Separated link</MenuItem>
+        </NavDropdown>
+      </Nav>
+      <Nav pullRight>
+        <NavItem eventKey={1} href="#">Link Right</NavItem>
+        <NavItem eventKey={2} href="#">Link Right</NavItem>
+      </Nav>
+    </Navbar.Collapse>
+    </Navbar>
+    );
+
     let CharacterList = React.createClass({
         getInitialState: function() {
             return({ characters: [],
-                     filterText: ""})
+                     filterText: "",
+                     view: "",
+                     charIndex: ""})
         },
         handleSearchBar: function(text){
             this.setState({ filterText: text});
@@ -45,30 +87,75 @@
                 this.setState({ characters: charsArray });
             }.bind(this))
         },
-        render: function(){
+        handleEnterDetailedView: function(e) {
+            this.setState({view: "detail",
+                           charIndex: e.target.id});
+        },
+        renderDetail: function() {
+            let character = this.state.characters[this.state.charIndex];
+            return(
+                <div>{ character }</div>
+            )
+        },
+        renderList: function(){
             let characterRows = [];
             //let searchCharacterInput = <input className='new-item' type="text" onChange={this.handleSearchBar}/>;
-            this.state.characters.forEach((character) => {
-                characterRows.push(<li><Character name={ character.name } picture={ character.thumbnail.path+".jpg"}/></li>);
+            this.state.characters.forEach((character, index) => {
+                characterRows.push(<li><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg"} key={index} id={ character.id } />
+                                       <button className="btn" onClick={this.handleEnterDetailedView} >View</button>
+                                   </li>);
             })
             return(<div>
-                      Look for a superhero: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
-                      { characterRows }
-                   </div>)
+                Look for a superhero: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
+                <ul className="three-columns">{ characterRows }</ul>
+                </div>)
+        },
+        render: function(){
+            if (this.state.view === "detail")
+                return this.renderDetail();
+            else
+                return this.renderList();
         }
-
     });
 
-    let Character = React.createClass({
+    let CharacterRow = React.createClass({
         render: function() {
             return(
                 <div>
                     <div>Name: { this.props.name }</div>
                     <div> <img src={ this.props.picture } width="300" height="300"/></div>
                 </div>
-        )
-    }
+            )
+        }
     });
+    //
+    // let CharacterDetail = React.createClass({
+    //     getInitialState: function () {
+    //         return()
+    //     },
+    //     componentDidMount: function() {
+    //         function hitAPI (query,fn){
+    //             let xhr = new XMLHttpRequest();
+    //             console.log(query);
+    //             xhr.onreadystatechange = function() {
+    //                 if (this.readyState == 4 && this.status == 200) {
+    //                     var chars = JSON.parse(this.responseText);
+    //                     return fn(chars)
+    //                 //chars["data"]["results"]
+    //                 }
+    //             };
+    //             xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters?ts=1&nameStartsWith=" + query + "&limit=100&apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd");
+    //             xhr.send();
+    //         };
+    //     },
+    //     render: function(){
+    //         return(
+    //             <div>
+    //                 <h3>{ this.props.name }</h3>
+    //             </div>
+    //         )
+    //     }
+    // })
 
     let SearchBar = React.createClass({
         getInitialState: function() {
@@ -83,6 +170,8 @@
     });
 
     ReactDOM.render(<CharacterList />, document.getElementById("main"));
+    ReactDOM.render(navbarInstance, document.getElementById("navbar"));
+
     </script>
 </html>
 </body>
