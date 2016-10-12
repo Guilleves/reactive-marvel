@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="https://unpkg.com/react@15.3.0/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <link rel="stylesheet" href="base.css" />
+
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+</head>
+<body>
+    <div >
+        <h1>Reactive Marvel Database</h1>
+    </div>
+    <div id="main">
+    </div>
+
+    <script type="text/babel">
+
+    function hitAPI (query,fn){
+        let xhr = new XMLHttpRequest();
+        console.log(query);
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var chars = JSON.parse(this.responseText);
+                return fn(chars)
+            //chars["data"]["results"]
+            }
+        };
+        xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters?ts=1&nameStartsWith=" + query + "&limit=100&apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd");
+        xhr.send();
+    };
+/////////////////////////////////////////////////
+    let CharacterList = React.createClass({
+        getInitialState: function() {
+            return({ characters: [],
+                     filterText: ""})
+        },
+        handleSearchBar: function(text){
+            this.setState({ filterText: text});
+            hitAPI(text, function(chars){
+                let charsArray = chars["data"]["results"];
+                this.setState({ characters: charsArray });
+            }.bind(this))
+        },
+        render: function(){
+            let characterRows = [];
+            //let searchCharacterInput = <input className='new-item' type="text" onChange={this.handleSearchBar}/>;
+            this.state.characters.forEach((character) => {
+                characterRows.push(<li><Character name={ character.name } picture={ character.thumbnail.path+".jpg"}/></li>);
+            })
+            return(<div>
+                      Look for a superhero: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
+                      { characterRows }
+                   </div>)
+        }
+
+    });
+
+    let Character = React.createClass({
+        render: function() {
+            return(
+                <div>
+                    <div>Name: { this.props.name }</div>
+                    <div> <img src={ this.props.picture } width="300" height="300"/></div>
+                </div>
+        )
+    }
+    });
+
+    let SearchBar = React.createClass({
+        getInitialState: function() {
+            return({ content: "" });
+        },
+        handleInput: function(e){
+            this.props.onUserInput(e.target.value);
+        },
+        render: function() {
+            return(<div><input type="text" value={this.props.filterText} onChange={this.handleInput} /></div>)
+        }
+    });
+
+    ReactDOM.render(<CharacterList />, document.getElementById("main"));
+    </script>
+</html>
+</body>
