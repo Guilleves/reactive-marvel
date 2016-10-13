@@ -107,16 +107,30 @@
                 )
             },
             renderList: function(){
-                let characterRows = [];
-                //let searchCharacterInput = <input className='new-item' type="text" onChange={this.handleSearchBar}/>;
-                this.state.characters.forEach((character, index) => {
-                    characterRows.push(<li><p><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg" } key={ character.id } id={ character.id } />
-                                           <button className="btn" onClick={this.handleEnterDetailedView} value={ character.id }>View</button></p>
-                                       </li>);
-                })
+                //let characterRows = [];
+                // this.state.characters.forEach((character, index) => {
+                //     characterRows.push(<li><p><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg" } key={ character.id } id={ character.id } />
+                //                            <button className="btn" onClick={this.handleEnterDetailedView} value={ character.id }>View</button></p>
+                //                        </li>);
+                // })
+                let characterRows = this.state.characters.map((char) => {
+                    return(<div><Col xs={6} md={4}>
+                    <Thumbnail src={ char.thumbnail.path+".jpg" } alt="242x200">
+                    <h3>{ char.name }</h3>
+                    <p>
+                        <Button bsStyle="primary" onClick={this.handleEnterDetailedView} value={ char.id }>View</Button>
+                        <Button bsStyle="default">Add to cart</Button>
+                    </p>
+                    </Thumbnail>
+                    </Col></div>)
+                });
                 return(<div>
                     Look for a superhero: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
-                    <ul className="three-columns">{ characterRows }</ul>
+                    <Grid>
+                    <Row>
+                    { characterRows }
+                    </Row>
+                    </Grid>
                     </div>)
             },
             render: function(){
@@ -169,42 +183,6 @@
             }
         });
     ///////////////////////////////////////// COMIC LIST
-        // const thumbnailInstance = (
-        // <Grid>
-        // <Row>
-        // <Col xs={6} md={4}>
-        //   <Thumbnail src="/assets/thumbnaildiv.png" alt="242x200">
-        //     <h3>{comicRows[key].name}</h3>
-        //     <p>Description</p>
-        //     <p>
-        //       <Button bsStyle="primary">Button</Button>&nbsp;
-        //       <Button bsStyle="default">Button</Button>
-        //     </p>
-        //   </Thumbnail>
-        // </Col>
-        // <Col xs={6} md={4}>
-        //   <Thumbnail src="/assets/thumbnaildiv.png" alt="242x200">
-        //     <h3>Thumbnail label</h3>
-        //     <p>Description</p>
-        //     <p>
-        //       <Button bsStyle="primary">Button</Button>&nbsp;
-        //       <Button bsStyle="default">Button</Button>
-        //     </p>
-        //   </Thumbnail>
-        // </Col>
-        // <Col xs={6} md={4}>
-        //   <Thumbnail src="/assets/thumbnaildiv.png" alt="242x200">
-        //     <h3>Thumbnail label</h3>
-        //     <p>Description</p>
-        //     <p>
-        //       <Button bsStyle="primary">Button</Button>&nbsp;
-        //       <Button bsStyle="default">Button</Button>
-        //     </p>
-        //   </Thumbnail>
-        // </Col>
-        // </Row>
-        // </Grid>
-        // );
 
         let ComicList = React.createClass({
             getInitialState: function(){
