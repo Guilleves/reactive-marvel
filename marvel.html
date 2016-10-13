@@ -17,9 +17,6 @@
     <div id="navbar" >
 
     </div>
-    <div >
-        <h1>Reactive Marvel Database</h1>
-    </div>
     <div id="main">
     </div>
 
@@ -78,7 +75,7 @@ const navbarInstance = (
             return({ characters: [],
                      filterText: "",
                      view: "",
-                     charIndex: ""})
+                     charId: ""})
         },
         handleSearchBar: function(text){
             this.setState({ filterText: text});
@@ -89,20 +86,24 @@ const navbarInstance = (
         },
         handleEnterDetailedView: function(e) {
             this.setState({view: "detail",
-                           charIndex: e.target.id});
+                           charId: e.target.value});
         },
         renderDetail: function() {
-            let character = this.state.characters[this.state.charIndex];
+            let charId = this.state.charId;
+            let char = this.state.characters.find(function(character) {
+                return character.id == charId;
+            });
+            console.log(char);
             return(
-                <div>{ character }</div>
+                <div><CharacterDetail name={ char.name } description={ char.description } picture={ char.thumbnail.path } comics={ char.comics.items } stories={ char.stories.items } events={ char.events.items } series={ char.series.items }/></div>
             )
         },
         renderList: function(){
             let characterRows = [];
             //let searchCharacterInput = <input className='new-item' type="text" onChange={this.handleSearchBar}/>;
             this.state.characters.forEach((character, index) => {
-                characterRows.push(<li><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg"} key={index} id={ character.id } />
-                                       <button className="btn" onClick={this.handleEnterDetailedView} >View</button>
+                characterRows.push(<li><p><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg" } key={ character.id } id={ character.id } />
+                                       <button className="btn" onClick={this.handleEnterDetailedView} value={ character.id }>View</button></p>
                                    </li>);
             })
             return(<div>
@@ -128,34 +129,25 @@ const navbarInstance = (
             )
         }
     });
-    //
-    // let CharacterDetail = React.createClass({
-    //     getInitialState: function () {
-    //         return()
-    //     },
-    //     componentDidMount: function() {
-    //         function hitAPI (query,fn){
-    //             let xhr = new XMLHttpRequest();
-    //             console.log(query);
-    //             xhr.onreadystatechange = function() {
-    //                 if (this.readyState == 4 && this.status == 200) {
-    //                     var chars = JSON.parse(this.responseText);
-    //                     return fn(chars)
-    //                 //chars["data"]["results"]
-    //                 }
-    //             };
-    //             xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters?ts=1&nameStartsWith=" + query + "&limit=100&apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd");
-    //             xhr.send();
-    //         };
-    //     },
-    //     render: function(){
-    //         return(
-    //             <div>
-    //                 <h3>{ this.props.name }</h3>
-    //             </div>
-    //         )
-    //     }
-    // })
+
+    let CharacterDetail = React.createClass({
+        // getInitialState: function () {
+        //     return()
+        // },
+        render: function(){
+            let comics = this.props.comics.map(comic => {
+                return <li><a href=# { comic.name }></a></li>
+            })
+            return(
+                <div>
+                    <h3>{ this.props.name }</h3>
+                    <img src={ this.props.picture+".jpg"} width="300" height="300"/>
+                    <p>{ this.props.description }</p>
+                    <p>{ comics }</p>
+                </div>
+            )
+        }
+    });
 
     let SearchBar = React.createClass({
         getInitialState: function() {
