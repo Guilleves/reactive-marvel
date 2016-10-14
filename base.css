@@ -97,4 +97,8 @@ ul {
     color: #fff;
     background-color:rgb(39, 221, 122);
     border-color: #22523c;
+},
+.thumb{
+    width: 200px;
+    height: 200px;
 }

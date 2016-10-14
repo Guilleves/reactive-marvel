@@ -48,7 +48,8 @@
     Row = ReactBootstrap.Row,
     Col = ReactBootstrap.Col,
     Thumbnail = ReactBootstrap.Thumbnail,
-    Button = ReactBootstrap.Button;
+    Button = ReactBootstrap.Button,
+    Modal = ReactBootstrap.Modal;
 
     const navbarInstance = (
         <Navbar inverse>
@@ -83,7 +84,8 @@
                 return({ characters: [],
                          filterText: "",
                          view: "",
-                         charId: ""})
+                         charId: "",
+                         characterComics: []})
             },
             handleSearchBar: function(text){
                 this.setState({ filterText: text});
@@ -96,26 +98,37 @@
                 this.setState({view: "detail",
                                charId: e.target.value});
             },
+            getComicsFromApi: function(query, fn) {
+                let xhr = new XMLHttpRequest();
+                console.log(query);
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var chars = JSON.parse(this.responseText);
+                        return fn(chars)
+                    }
+                };
+                xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters/" + query + "/comics?ts=1&limit=100&apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd");
+                xhr.send();
+            },
             renderDetail: function() {
                 let charId = this.state.charId;
+                this.getComicsFromApi(charId, function(coms){
+                    let comsArray = coms["data"]["results"];
+                    this.setState({ characterComics: comsArray });
+                }.bind(this));
+                console.log(this.state.characterComics);
                 let char = this.state.characters.find(function(character) {
                     return character.id == charId;
                 });
                 console.log(char);
                 return(
-                    <div><CharacterDetail name={ char.name } description={ char.description } picture={ char.thumbnail.path } comics={ char.comics.items } stories={ char.stories.items } events={ char.events.items } series={ char.series.items }/></div>
+                    <div><CharacterDetail name={ char.name } description={ char.description } picture={ char.thumbnail.path } comics={ this.state.characterComics } stories={ char.stories.items } events={ char.events.items } series={ char.series.items }/></div>
                 )
             },
             renderList: function(){
-                //let characterRows = [];
-                // this.state.characters.forEach((character, index) => {
-                //     characterRows.push(<li><p><CharacterRow name={ character.name } picture={ character.thumbnail.path+".jpg" } key={ character.id } id={ character.id } />
-                //                            <button className="btn" onClick={this.handleEnterDetailedView} value={ character.id }>View</button></p>
-                //                        </li>);
-                // })
                 let characterRows = this.state.characters.map((char) => {
                     return(<div><Col xs={6} md={4}>
-                    <Thumbnail src={ char.thumbnail.path+".jpg" } alt="242x200">
+                    <Thumbnail className="thumb" src={ char.thumbnail.path+".jpg" } width="200" height="200">
                     <h3>{ char.name }</h3>
                     <p>
                         <Button bsStyle="primary" onClick={this.handleEnterDetailedView} value={ char.id }>View</Button>
@@ -141,24 +154,39 @@
             }
         });
 
-        let CharacterRow = React.createClass({
-            render: function() {
-                return(
-                    <div>
-                        <div>Name: { this.props.name }</div>
-                        <div> <img src={ this.props.picture } width="300" height="300"/></div>
-                    </div>
-                )
-            }
-        });
-
         let CharacterDetail = React.createClass({
-            // getInitialState: function () {
-            //     return()
-            // },
+            getInitialState() {
+              return ({ showModal: false });
+            },
+            close() {
+              this.setState({ showModal: false });
+            },
+            open() {
+              this.setState({ showModal: true });
+            },
             render: function(){
                 let comics = this.props.comics.map(comic => {
-                    return <li>{ comic.name }</li>
+                    return (<div>
+                        <p>{ comic.title }</p>
+                        <Button bsStyle="primary" bsSize="large" onClick={this.open} value={ comic.id }>View</Button>
+                        <Modal show={this.state.showModal} onHide={this.close}>
+                          <Modal.Header closeButton>
+                            <Modal.Title>{comic.title}</Modal.Title>
+                          </Modal.Header>
+                          <Modal.Body>
+                              <h4>About</h4>
+                              <img src={ comic.thumbnail.path+".jpg"} width="200" height="300"/>
+                              <p>{ comic.description }</p>
+                              <p>Price: { comic.prices.price }</p>
+                              <span>Page count: { comic.pageCout }</span>
+                            <hr />
+                          </Modal.Body>
+                          <Modal.Footer>
+                            <Button onClick={this.close}>Close</Button>
+                          </Modal.Footer>
+                        </Modal>
+                        </div>
+                    )
                 })
                 return(
                     <div>
@@ -182,6 +210,7 @@
                 return(<div><input type="text" value={this.props.filterText} onChange={this.handleInput} /></div>)
             }
         });
+
     ///////////////////////////////////////// COMIC LIST
 
         let ComicList = React.createClass({
@@ -196,6 +225,9 @@
                     this.setState({ comics: comsArray });
                 }.bind(this))
             },
+            // renderDetail: function(){
+            //
+            // },
             render: function() {
                 let comicRows = this.state.comics.map((comic) => {
                     return (
