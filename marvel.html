@@ -19,8 +19,6 @@
         </div>
         <div id="main">
         </div>
-        <div id="comics">
-        </div>
 
         <script type="text/babel">
 
@@ -37,6 +35,17 @@
             xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters?ts=1&nameStartsWith=" + query + "&limit=100&apikey=c853e32a3cdaa00bfb344c5bd47c1230&hash=ad8228ded3fe3fd80db2d703b88f1397");
             xhr.send();
         };
+
+        function onSelectCharacters(eventKey){
+            ReactDOM.render(<CharacterList />, document.getElementById("main"));
+        };
+        function onSelectComics(eventKey){
+            ReactDOM.render(<ComicList />, document.getElementById("main"));
+        };
+        function onSelectMain(eventKey){
+            ReactDOM.render(navbarInstance, document.getElementById("navbar"));
+            ReactDOM.render(carouselInstance, document.getElementById("main"));
+        };
     //original: &apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd
     /////////////////////////////////////////////////
     var Navbar = ReactBootstrap.Navbar,
@@ -50,20 +59,20 @@
     Col = ReactBootstrap.Col,
     Thumbnail = ReactBootstrap.Thumbnail,
     Button = ReactBootstrap.Button,
-    Modal = ReactBootstrap.Modal;
+    Modal = ReactBootstrap.Modal,
+    Carousel = ReactBootstrap.Carousel;
 
     const navbarInstance = (
         <Navbar inverse>
         <Navbar.Header>
-          <Navbar.Brand>
-            <a href="#">Marvel Catalogue</a>
-          </Navbar.Brand>
+
           <Navbar.Toggle />
         </Navbar.Header>
         <Navbar.Collapse>
           <Nav>
-            <NavItem eventKey={1} href="#">Characters</NavItem>
-            <NavItem eventKey={2} href="#">Comics</NavItem>
+            <NavItem eventKey={0} onSelect={onSelectMain} href="#">Marvel Catalogue</NavItem>
+            <NavItem eventKey={1} onSelect={onSelectCharacters} href="#">Characters</NavItem>
+            <NavItem eventKey={2} onSelect={onSelectComics} href="#">Comics</NavItem>
             <NavDropdown eventKey={3} title="Dropdown" id="basic-nav-dropdown">
               <MenuItem eventKey={3.1}>Action</MenuItem>
               <MenuItem eventKey={3.2}>Another action</MenuItem>
@@ -78,6 +87,28 @@
           </Nav>
         </Navbar.Collapse>
         </Navbar>
+        );
+
+        const carouselInstance = (
+          <Carousel>
+            <Carousel.Item>
+              <img width={1280} height={720} alt="1280x500" src="/assets/logo.jpg"/>
+            </Carousel.Item>
+            <Carousel.Item>
+              <img width={1280} height={720} alt="900x500" src="/assets/avengers.jpg"/>
+              <Carousel.Caption>
+                <h3>Characters</h3>
+                <p>Search characters by name</p>
+              </Carousel.Caption>
+            </Carousel.Item>
+            <Carousel.Item>
+              <img width={1280} height={720} alt="900x500" src="/assets/series.jpg"/>
+              <Carousel.Caption>
+                <h3>Comics</h3>
+                <p>Search comics by name</p>
+              </Carousel.Caption>
+            </Carousel.Item>
+          </Carousel>
         );
 
         let CharacterList = React.createClass({
@@ -99,18 +130,18 @@
                 this.setState({view: "detail",
                                charId: e.target.value});
             },
-            getComicsFromApi: function(query, fn) {
-                let xhr = new XMLHttpRequest();
-                console.log(query);
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        var chars = JSON.parse(this.responseText);
-                        return fn(chars)
-                    }
-                };
-                xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters/" + query + "/comics?ts=1&limit=100&apikey=c853e32a3cdaa00bfb344c5bd47c1230&hash=ad8228ded3fe3fd80db2d703b88f1397");
-                xhr.send();
-            },
+            // getComicsFromApi: function(query, fn) {
+            //     let xhr = new XMLHttpRequest();
+            //     console.log(query);
+            //     xhr.onreadystatechange = function() {
+            //         if (this.readyState == 4 && this.status == 200) {
+            //             var chars = JSON.parse(this.responseText);
+            //             return fn(chars)
+            //         }
+            //     };
+            //     xhr.open("GET", "http://gateway.marvel.com:80/v1/public/characters/" + query + "/comics?ts=1&limit=100&apikey=c853e32a3cdaa00bfb344c5bd47c1230&hash=ad8228ded3fe3fd80db2d703b88f1397");
+            //     xhr.send();
+            // },
             renderDetail: function() {
                 let charId = this.state.charId;
                 console.log(this.state.characterComics);
@@ -129,13 +160,12 @@
                     <h3>{ char.name }</h3>
                     <p>
                         <Button bsStyle="primary" onClick={this.handleEnterDetailedView} value={ char.id }>View</Button>
-                        <Button bsStyle="default">Add to cart</Button>
                     </p>
                     </Thumbnail>
                     </Col></div>)
                 });
                 return(<div>
-                    Look for a superhero: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
+                     Look for a character by name: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/>
                     <Grid>
                     <Row>
                     { characterRows }
@@ -235,7 +265,8 @@
                 return({ comics: [],
                          filterText: "",
                          comicId: "",
-                         view: ""});
+                         view: "",
+                         cart: []});
             },
             handleSearchBar: function(text) {
                 this.setState({filterText: text});
@@ -246,7 +277,36 @@
             },
             handleEnterDetailedView: function(e) {
                 this.setState({view: "detail",
-                               comicId: e.target.value})
+                               comicId: e.target.value,
+                               comicName: e.target.name})
+            },
+            addComicToCart: function(e) {
+                this.setState({cart: JSON.parse(localStorage.getItem('cart'))});
+                let comicId = e.target.value;
+                let comic = this.state.comics.find(comic =>{
+                    return comic.id == comicId});
+                let cart = this.state.cart;
+                console.log("comic", comic);
+                if (this.state.cart == null){
+                    cart = [];
+                    cart.push(<li><ComicRow key={ comic.id } name={ comic.name } picture={ comic.picture }/></li>);
+                    console.log(cart);
+                }
+                else {
+                    // cart.forEach((comic) => {
+                    //     if (comic.id == comicId)
+                    //         alert("already in cart")
+                    //     else {
+                            cart.push(<li><ComicRow key={ comic.id } name={ comic.name } picture={ comic.picture }/></li>);
+                            console.log(cart);
+                        //}
+                    // });
+                };
+                localStorage.removeItem('cart');
+                localStorage.setItem('cart', JSON.stringify(cart));
+                console.log(cart);
+                console.log(localStorage.getItem('cart'));
+
             },
             renderDetail: function() {
                 let comicId = this.state.comicId;
@@ -263,13 +323,12 @@
             render: function() {
                 let comicRows = this.state.comics.map((comic) => {
                     return (
-                        <div><Col xs={6} md={4}>
+                        <div className="thumb"><Col xs={6} md={4}>
                         <Thumbnail src={ comic.thumbnail.path+".jpg" } alt="242x200">
                         <h3>{ comic.title }</h3>
-                        <p>{ comic.description }</p>
                         <p>
                             <Button bsStyle="primary" value={ comic.id } onClick={ this.handleEnterDetailedView }>View</Button>
-                            <Button bsStyle="default">Add to cart</Button>
+                            <button type="button" className="btn" value={ comic.id } name={comic.name} onClick={ this.addComicToCart }>Add to cart</button>
                         </p>
                         </Thumbnail>
                         </Col></div>)});
@@ -284,7 +343,7 @@
                         { comicRows }
                         </Row>
                         </Grid>
-                        <p>Look for a comic: <SearchBar onUserInput={this.handleSearchBar} filterText={this.state.filterText}/></p>
+                        <p>Look for a comic by name: <SearchBar className="form-control input-lg" onUserInput={this.handleSearchBar} filterText={this.state.filterText}/></p>
                         </div>
                     )
             },
@@ -307,7 +366,6 @@
                 return( <div>
                             <p>Comic: { this.props.name }</p>
                             <img src={ this.props.picture+".jpg"} width="300" height="300"/>
-                            <p>{ this.props.description }</p>
                         </div>)
             }
         });
@@ -331,11 +389,45 @@
                     </div>
                 )
             }
-        })
+        });
+        //////////////////////////////////////////// WISHLIST
+        let Wishlist = React.createClass({
+            getInitialState: function() {
+                return({list:[],
+                        ls: JSON.parse(localStorage.getItem('cart'))})
+            },
+            render: function() {
+                return (
+                    <div>
+                    </div>
+                )
+            }
+        });
 
-        ReactDOM.render(<CharacterList />, document.getElementById("main"));
-        ReactDOM.render(<ComicList />, document.getElementById("comics"));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //ReactDOM.render(<CharacterList />, document.getElementById("main"));
+        //ReactDOM.render(<ComicList />, document.getElementById("comics"));
         ReactDOM.render(navbarInstance, document.getElementById("navbar"));
+        ReactDOM.render(carouselInstance, document.getElementById("main"));
 
         </script>
     </html>
