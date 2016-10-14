@@ -36,7 +36,7 @@ let CharacterDetail = React.createClass({
         let stories = this.props.stories.map(story => {
             return(<div><li>{story.name}</li></div>)
         });
-        let comics = this.state.characterComics.map((comic, index) => {
+        let comics = this.state.characterComics.map((comic) => {
             return (<div>
                 <p>{ comic.title }</p>
                 <Button bsStyle="primary" bsSize="large" onClick={this.open} value={ comic.id }>View</Button>
