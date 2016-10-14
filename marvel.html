@@ -46,6 +46,9 @@
             ReactDOM.render(navbarInstance, document.getElementById("navbar"));
             ReactDOM.render(carouselInstance, document.getElementById("main"));
         };
+        function onSelectWishlist(eventKey){
+            ReactDOM.render(<Wishlist/>, document.getElementById("main"));
+        };
     //original: &apikey=039eb48267ed197802f5e77e78d0f3f5&hash=e90ab34566660a82686c9d188a356fbd
     /////////////////////////////////////////////////
     var Navbar = ReactBootstrap.Navbar,
@@ -60,7 +63,9 @@
     Thumbnail = ReactBootstrap.Thumbnail,
     Button = ReactBootstrap.Button,
     Modal = ReactBootstrap.Modal,
-    Carousel = ReactBootstrap.Carousel;
+    Carousel = ReactBootstrap.Carousel,
+    Panel = ReactBootstrap.Panel,
+    Accordion = ReactBootstrap.Accordion;
 
     const navbarInstance = (
         <Navbar inverse>
@@ -82,7 +87,7 @@
             </NavDropdown>
           </Nav>
           <Nav pullRight>
-            <NavItem eventKey={1} href="#">Link Right</NavItem>
+            <NavItem eventKey={1} onSelect={onSelectWishlist} href="#">Wishlist</NavItem>
             <NavItem eventKey={2} href="#">Link Right</NavItem>
           </Nav>
         </Navbar.Collapse>
@@ -266,7 +271,7 @@
                          filterText: "",
                          comicId: "",
                          view: "",
-                         cart: []});
+                         cart: JSON.parse(localStorage.getItem('cart'))});
             },
             handleSearchBar: function(text) {
                 this.setState({filterText: text});
@@ -281,32 +286,25 @@
                                comicName: e.target.name})
             },
             addComicToCart: function(e) {
+                console.log("ls", JSON.parse(localStorage.getItem('cart')));
                 this.setState({cart: JSON.parse(localStorage.getItem('cart'))});
+                console.log("estado", this.state.cart);
                 let comicId = e.target.value;
-                let comic = this.state.comics.find(comic =>{
+                let comic = this.state.comics.find(comic => {
                     return comic.id == comicId});
                 let cart = this.state.cart;
                 console.log("comic", comic);
                 if (this.state.cart == null){
                     cart = [];
-                    cart.push(<li><ComicRow key={ comic.id } name={ comic.name } picture={ comic.picture }/></li>);
-                    console.log(cart);
+                    //cart.push(<li><ComicRow key={ comic.id } name={ comic.name } picture={ comic.picture }/></li>);
+                    cart.push(comic);
                 }
                 else {
-                    // cart.forEach((comic) => {
-                    //     if (comic.id == comicId)
-                    //         alert("already in cart")
-                    //     else {
-                            cart.push(<li><ComicRow key={ comic.id } name={ comic.name } picture={ comic.picture }/></li>);
-                            console.log(cart);
-                        //}
-                    // });
+                    cart.push(comic);
                 };
+                console.log("cart final", cart);
                 localStorage.removeItem('cart');
                 localStorage.setItem('cart', JSON.stringify(cart));
-                console.log(cart);
-                console.log(localStorage.getItem('cart'));
-
             },
             renderDetail: function() {
                 let comicId = this.state.comicId;
@@ -365,7 +363,7 @@
             render: function(){
                 return( <div>
                             <p>Comic: { this.props.name }</p>
-                            <img src={ this.props.picture+".jpg"} width="300" height="300"/>
+                            <img src={ this.props.picture+".jpg"} width="200" height="300"/>
                         </div>)
             }
         });
@@ -397,32 +395,25 @@
                         ls: JSON.parse(localStorage.getItem('cart'))})
             },
             render: function() {
+                let wishlist = this.state.ls.map(comic => {
+                    return(
+                        <div>
+                        <Accordion>
+                        <Panel header={comic.title} bsStyle="primary" eventKey="1   ">
+                            <p><img src={comic.thumbnail.path+".jpg"} width="200" height="300"/></p>
+                            <span>Price: {comic.prices[0].price}</span>
+                        </Panel>
+                        </Accordion>
+                        </div>
+                    );
+                })
                 return (
                     <div>
+                    {wishlist}
                     </div>
                 )
             }
         });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         //ReactDOM.render(<CharacterList />, document.getElementById("main"));
         //ReactDOM.render(<ComicList />, document.getElementById("comics"));
